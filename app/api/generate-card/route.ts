@@ -11,6 +11,7 @@ interface RequestBody {
   title: string;
   hablaEspanol: boolean;
   smileEnhancement: boolean;
+  biggerSmile: boolean;
   lightingEnhancement: boolean;
   cell: string;
   main: string;

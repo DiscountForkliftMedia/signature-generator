@@ -23,14 +23,14 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
       <Section title="Source Images">
         <div className="grid grid-cols-2 gap-3">
           <ImageUploader
-            label="Ã¢â€˜Â  Headshot"
+            label="1. Headshot"
             description="The new employee's photo. Replaces the circular photo on the card."
             value={data.headshotDataUrl}
             onChange={(v) => update("headshotDataUrl", v)}
             accentClass="border-df-green"
           />
           <ImageUploader
-            label="Ã¢â€˜Â¡ Reference Card *"
+            label="② Reference Card *"
             description="An existing Discount Forklift card. Gemini will clone its design exactly."
             value={data.referenceDataUrl}
             onChange={(v) => update("referenceDataUrl", v)}
@@ -100,7 +100,7 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
               }
             `}
           >
-            {data.hablaEspanol ? "Ã¢Å“â€œ Hablo EspaÃƒÂ±ol Ã¢â‚¬â€ VISIBLE" : "Add 'Hablo EspaÃƒÂ±ol' line"}
+            {data.hablaEspanol ? "[x] Hablo Espanol -- VISIBLE" : "Add 'Hablo Espanol' line"}
           </button>
         </Field>
       </Section>
@@ -183,7 +183,7 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         disabled={!canGenerate || generating}
         className="w-full py-5 bg-df-red hover:bg-df-red/90 disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-anton text-2xl tracking-widest rounded-md transition-all shadow-lg shadow-df-red/30 disabled:shadow-none"
       >
-        {generating ? "GENERATINGÃ¢â‚¬Â¦" : "Ã¢Å“Â¨ GENERATE CARD"}
+        {generating ? "GENERATING" : "FINAL STEP - GENERATE NEW SIGNATURE CARD"}
       </button>
       {!canGenerate && !generating && (
         <p className="text-xs text-neutral-500 text-center -mt-4">

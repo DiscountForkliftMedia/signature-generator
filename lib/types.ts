@@ -8,7 +8,11 @@ export interface EmployeeData {
   email: string;
   website: string;
   hablaEspanol: boolean;
+  hablaEspanol: false,
   smileEnhancement: boolean;
+  smileEnhancement: false,
+  biggerSmile: boolean;
+  biggerSmile: false,
   lightingEnhancement: boolean;
   location: LocationKey;
   headshotDataUrl: string | null;     // Field 1
