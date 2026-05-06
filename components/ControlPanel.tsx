@@ -1,6 +1,3 @@
-cd "C:\Users\skc\Documents\GitHub\df-signature"
-
-$clean = @'
 "use client";
 
 import React from "react";
@@ -22,7 +19,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
 
   return (
     <div className="space-y-7">
-      {/* ============= TWIN UPLOADER ============= */}
       <Section title="Source Images">
         <div className="grid grid-cols-2 gap-3">
           <ImageUploader
@@ -46,7 +42,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         </p>
       </Section>
 
-      {/* ============= HEADSHOT ENHANCEMENTS ============= */}
       <Section title="Headshot Enhancements">
         <Toggle
           label="Add a big, genuine smile"
@@ -68,7 +63,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         />
       </Section>
 
-      {/* ============= EMPLOYEE INFO ============= */}
       <Section title="Employee">
         <Field label="Full Name">
           <input
@@ -108,7 +102,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         </Field>
       </Section>
 
-      {/* ============= CONTACT INFO ============= */}
       <Section title="Contact">
         <div className="grid grid-cols-2 gap-3">
           <Field label="Cell (Direct Line in PRO)">
@@ -148,7 +141,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         </Field>
       </Section>
 
-      {/* ============= LOCATION TOGGLE ============= */}
       <Section title="Location (Address shown on card)">
         <div className="grid grid-cols-2 gap-2">
           {(Object.keys(LOCATIONS) as LocationKey[]).map((k) => {
@@ -177,7 +169,6 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
         </div>
       </Section>
 
-      {/* ============= GENERATE ============= */}
       <button
         type="button"
         onClick={onGenerate}
@@ -261,10 +252,3 @@ function Toggle({
     </button>
   );
 }
-'@
-
-$abs = (Resolve-Path components/ControlPanel.tsx).Path
-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllText($abs, $clean, $utf8NoBom)
-
-Write-Host "OK ControlPanel.tsx rewritten cleanly" -ForegroundColor Green
