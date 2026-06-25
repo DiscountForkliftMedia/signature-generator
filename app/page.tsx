@@ -15,9 +15,10 @@ export default function Home() {
   const [data, setData] = useState<EmployeeData>(DEFAULT_EMPLOYEE);
   const [gen, setGen] = useState<GenState>({ status: "idle" });
 
+  // The reference card is built in on the backend, so users only need a headshot.
+  // Uploading a reference is optional and overrides the default.
   const canGenerate =
     !!data.headshotDataUrl &&
-    !!data.referenceDataUrl &&
     data.name.trim().length > 0 &&
     data.title.trim().length > 0;
 
@@ -29,7 +30,8 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          referenceDataUrl: data.referenceDataUrl,
+          // Omitted when null -> backend falls back to the built-in reference card.
+          referenceDataUrl: data.referenceDataUrl ?? undefined,
           headshotDataUrl: data.headshotDataUrl,
           name: data.name,
           title: data.title,
@@ -42,7 +44,6 @@ export default function Home() {
           email: data.email,
           website: data.website,
           address: LOCATIONS[data.location].address,
-          activeCity: LOCATIONS[data.location].city,
         }),
       });
       const json = (await res.json()) as { imageDataUrl?: string; error?: string };
@@ -61,8 +62,10 @@ export default function Home() {
   function handleDownload() {
     if (gen.status !== "done") return;
     const a = document.createElement("a");
-    const safeName = data.name.replace(/[^a-zA-Z0-9_-]+/g, "_") || "signature";
-    a.download = `${safeName}_${data.location}.png`;
+    const year = new Date().getFullYear();
+    // Keep spaces, strip only characters that are illegal in filenames.
+    const safeName = data.name.replace(/[\\/:*?"<>|]+/g, "").trim() || "Signature";
+    a.download = `${year} ${safeName}.png`;
     a.href = gen.imageDataUrl;
     a.click();
   }
@@ -168,15 +171,14 @@ export default function Home() {
 
 function EmptyState({ canGenerate, data }: { canGenerate: boolean; data: EmployeeData }) {
   const missing: string[] = [];
-  if (!data.referenceDataUrl) missing.push("Reference card (Field 2)");
-  if (!data.headshotDataUrl) missing.push("Employee headshot (Field 1)");
+  if (!data.headshotDataUrl) missing.push("Employee headshot");
   if (!data.name.trim()) missing.push("Employee name");
   if (!data.title.trim()) missing.push("Job title");
 
   return (
     <div className="text-center py-20 px-8">
       <p className="text-neutral-400 text-sm mb-3 max-w-md mx-auto">
-        Upload a reference card and an employee headshot, fill in the details on the left, then click <span className="text-df-orange font-bold">Generate Card</span>.
+        Upload an employee headshot, fill in the details on the left, then click <span className="text-df-orange font-bold">Generate Card</span>. The reference card is built in.
       </p>
       {!canGenerate && missing.length > 0 && (
         <div className="mt-4 inline-block text-left bg-neutral-900/50 border border-neutral-800 rounded-md p-3">

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { readFile } from "fs/promises";
+import path from "path";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 interface RequestBody {
-  referenceDataUrl: string;
+  referenceDataUrl?: string;
   headshotDataUrl: string;
   name: string;
   title: string;
@@ -18,13 +20,42 @@ interface RequestBody {
   email: string;
   website: string;
   address: string;
-  activeCity: string;
 }
 
 function parseDataUrl(dataUrl: string): { mimeType: string; data: string } {
   const match = /^data:([^;]+);base64,(.+)$/i.exec(dataUrl);
   if (!match) throw new Error("Invalid data URL");
   return { mimeType: match[1], data: match[2] };
+}
+
+// Bundled reference card so users only need to upload a headshot. A user-supplied
+// reference (referenceDataUrl) always takes precedence over this default.
+const DEFAULT_REFERENCE_CANDIDATES: Array<{ file: string; mimeType: string }> = [
+  { file: "reference-card.png", mimeType: "image/png" },
+  { file: "reference-card.jpg", mimeType: "image/jpeg" },
+  { file: "reference-card.jpeg", mimeType: "image/jpeg" },
+  { file: "reference-card.webp", mimeType: "image/webp" },
+];
+
+async function loadReference(
+  b: RequestBody
+): Promise<{ mimeType: string; data: string }> {
+  if (b.referenceDataUrl) return parseDataUrl(b.referenceDataUrl);
+
+  for (const candidate of DEFAULT_REFERENCE_CANDIDATES) {
+    try {
+      const buf = await readFile(
+        path.join(process.cwd(), "public", candidate.file)
+      );
+      return { mimeType: candidate.mimeType, data: buf.toString("base64") };
+    } catch {
+      // try the next candidate
+    }
+  }
+
+  throw new Error(
+    "No reference card available. Upload one, or add a built-in default at public/reference-card.png."
+  );
 }
 
 function buildPrompt(b: RequestBody): string {
@@ -49,6 +80,8 @@ function buildPrompt(b: RequestBody): string {
 
 GOAL: Output a new version of [IMAGE 1] that is visually IDENTICAL to it except for the specific changes listed below. Treat this like a flawless reproduction job. Every visual property - fonts, colors, weights, sizes, alignment, positioning, spacing, backgrounds, logos, graphics, drop shadows, photographic effects - must be preserved EXACTLY as it appears in the reference card. Do not invent colors. Do not change any color you are not explicitly instructed to change.
 
+CRITICAL - COLOR SATURATION & VIBRANCY: Reproduce every color at the EXACT same saturation, vibrancy, hue, and brightness as the reference. Do NOT desaturate, mute, dull, wash out, fade, or shift any color. This is the most common failure mode - the output frequently comes back slightly desaturated, ESPECIALLY the reds and greens. The bright, punchy RED (the banner, the heart, the "Discount Forklift" script logo) and the vivid GREEN (the photo ring, the city names in the location strip, the contact-label text) must stay just as bold, deep, and fully saturated as in the reference - never paler, never grayer, never more pastel. Match the reference's color intensity pixel-for-pixel. When in doubt, err toward MORE saturation rather than less, but the target is an exact match.
+
 THE ONLY CHANGES YOU MAY MAKE:
 
 1. PHOTO REPLACEMENT
@@ -64,8 +97,8 @@ THE ONLY CHANGES YOU MAY MAKE:
    * Website -> "${b.website}"
    * Address line -> "${b.address}"
 
-3. CITY STRIP EMPHASIS
-   In the city list (Denver - Las Vegas - Phoenix - DFW), make "${b.activeCity}" the visually emphasized one (bold, matching how the reference card emphasizes its currently-active city). All four cities remain present, in the same order.
+3. LOCATION STRIP COLOR - UNIFORM GREEN
+   The location strip lists four cities: Denver - Las Vegas - Phoenix - DFW. Render ALL FOUR city names in the SAME green color, the SAME weight, and the SAME size, identical to one another. Do NOT bold, brighten, whiten, highlight, or otherwise emphasize any single city. If a city in the reference appears bold or white (not green), RECOLOR it to match the exact same green as the other cities so that all four look uniform. Keep all four cities present and in the same order.
 
 PRESERVE EVERYTHING ELSE EXACTLY AS IT APPEARS IN THE REFERENCE.
 
@@ -83,10 +116,12 @@ Every pixel of the reference card that is not explicitly listed above as a "chan
 - The aspect ratio (output should match [IMAGE 1] exactly - approximately 1000 x 838 pixels)
 
 ABSOLUTELY DO NOT:
+- Desaturate, mute, dull, fade, or wash out ANY color - keep the reds and greens fully saturated and as vivid as the reference
 - Invent new colors not present in the reference
 - Add highlight boxes, pill backgrounds, shaded rectangles, or colored fills behind any text
 - Tint, shade, or recolor any text
 - Add underlines or borders that aren't in the reference
+- Bold, whiten, or otherwise emphasize any single city in the location strip - all four cities must stay uniform green (recoloring a bold/white city to match the others is the ONLY recolor you should perform)
 - Add watermarks or captions
 - Add any new graphic elements
 - Crop, rotate, or reframe the image
@@ -99,9 +134,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as RequestBody;
 
-    if (!body.referenceDataUrl || !body.headshotDataUrl) {
+    if (!body.headshotDataUrl) {
       return NextResponse.json(
-        { error: "Both 'referenceDataUrl' and 'headshotDataUrl' are required." },
+        { error: "'headshotDataUrl' is required." },
         { status: 400 }
       );
     }
@@ -114,7 +149,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const reference = parseDataUrl(body.referenceDataUrl);
+    const reference = await loadReference(body);
     const headshot = parseDataUrl(body.headshotDataUrl);
     const prompt = buildPrompt(body);
 

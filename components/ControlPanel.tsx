@@ -22,15 +22,15 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
       <Section title="Source Images">
         <div className="grid grid-cols-2 gap-3">
           <ImageUploader
-            label="1. Headshot"
+            label="1. Headshot *"
             description="The new employee's photo. Replaces the circular photo on the card."
             value={data.headshotDataUrl}
             onChange={(v) => update("headshotDataUrl", v)}
             accentClass="border-df-green"
           />
           <ImageUploader
-            label="2. Reference Card *"
-            description="An existing Discount Forklift card. Gemini will clone its design exactly."
+            label="2. Reference Card"
+            description="Optional. A built-in card is used by default; upload here only to override it."
             value={data.referenceDataUrl}
             onChange={(v) => update("referenceDataUrl", v)}
             accentClass="border-df-cyan"
@@ -38,7 +38,7 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
           />
         </div>
         <p className="text-[11px] text-neutral-500 leading-relaxed">
-          <span className="text-df-cyan font-bold">*</span> The reference is the design template -- without it, Gemini has nothing to clone.
+          <span className="text-df-green font-bold">*</span> Only the headshot is required. The reference card is built in -- upload your own only to clone a different design.
         </p>
       </Section>
 
