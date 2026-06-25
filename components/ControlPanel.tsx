@@ -17,29 +17,62 @@ export function ControlPanel({ data, onChange, onGenerate, generating, canGenera
   const update = <K extends keyof EmployeeData>(key: K, value: EmployeeData[K]) =>
     onChange({ ...data, [key]: value });
 
+  const [showReferenceOverride, setShowReferenceOverride] = React.useState(false);
+  const referenceVisible = showReferenceOverride || !!data.referenceDataUrl;
+
   return (
     <div className="space-y-7">
-      <Section title="Source Images">
-        <div className="grid grid-cols-2 gap-3">
+      <Section title="Employee Headshot">
+        <div className="max-w-[260px]">
           <ImageUploader
-            label="1. Headshot *"
+            label="Headshot *"
             description="The new employee's photo. Replaces the circular photo on the card."
             value={data.headshotDataUrl}
             onChange={(v) => update("headshotDataUrl", v)}
             accentClass="border-df-green"
           />
-          <ImageUploader
-            label="2. Reference Card"
-            description="Optional. A built-in card is used by default; upload here only to override it."
-            value={data.referenceDataUrl}
-            onChange={(v) => update("referenceDataUrl", v)}
-            accentClass="border-df-cyan"
-            keepAspect
-          />
         </div>
         <p className="text-[11px] text-neutral-500 leading-relaxed">
-          <span className="text-df-green font-bold">*</span> Only the headshot is required. The reference card is built in -- upload your own only to clone a different design.
+          The signature card design is built in -- you only need to upload a headshot.
         </p>
+
+        {!referenceVisible ? (
+          <button
+            type="button"
+            onClick={() => setShowReferenceOverride(true)}
+            className="text-[11px] text-neutral-500 hover:text-df-cyan underline underline-offset-2 transition-colors"
+          >
+            Advanced: clone a different reference card
+          </button>
+        ) : (
+          <div className="space-y-2 pt-3 border-t border-neutral-800">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">
+                Custom reference card
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  update("referenceDataUrl", null);
+                  setShowReferenceOverride(false);
+                }}
+                className="text-[11px] text-neutral-500 hover:text-df-red transition-colors"
+              >
+                Use built-in instead
+              </button>
+            </div>
+            <div className="max-w-[260px]">
+              <ImageUploader
+                label="Reference Card"
+                description="Optional override. Replaces the built-in card with this design."
+                value={data.referenceDataUrl}
+                onChange={(v) => update("referenceDataUrl", v)}
+                accentClass="border-df-cyan"
+                keepAspect
+              />
+            </div>
+          </div>
+        )}
       </Section>
 
       <Section title="Headshot Enhancements">
